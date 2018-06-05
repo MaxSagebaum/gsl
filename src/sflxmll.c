@@ -1427,10 +1427,13 @@ xml_load_item (XML_ITEM  *item, XML_BUFFER *buf)
                    return XML_LOADERROR;
                  }
                mem_free (item_name);
+               for(int i = 0; i < 7; ++i) {buf_next(buf);} /* Skip CDATA[[ */
                /*  It is a CDATA element. Skip everything until the next occurence
                 *  of ']]>'
                 */
                found = FALSE;
+               char* cdata = NULL;
+               size_t cdataSize = 0;
                while (!found)
                   {
                     buf_next(buf);
@@ -1442,10 +1445,30 @@ xml_load_item (XML_ITEM  *item, XML_BUFFER *buf)
                     found = ((size >= 2)
                         && (comment[size-1] == ']')
                         && (comment[size-2] == ']')) ? TRUE : FALSE;
+
+                    /* copy the data into the cdata array */
+                    if(found) {
+                      size -= 2; /* skip the ]] */
+                    } else {
+                      size += 1; /* add one for the '>' */
+                    }
+                    size_t newCdataSize = cdataSize + size;
+                    cdata = (char*) mem_realloc (cdata, newCdataSize + 1); /* +1 for terminator */
+                    memcpy(&cdata[cdataSize], comment, size + 1); /* +1 for terminator, if !found then one byte to many is copied here */
+                    cdataSize = newCdataSize;
+                    if(!found) {
+                      /* add the '>' */
+                      cdata[cdataSize - 1] = '>';
+                    }
+                    cdata[cdataSize] = '\0';
+
                     mem_free (comment);
                   }
-                if (found)
+                if (found) {
                     buf_next(buf);
+                }
+
+                xml_new_no_dup (item, NULL, cdata);
              }
             else
 			  {
