@@ -1427,7 +1427,7 @@ xml_load_item (XML_ITEM  *item, XML_BUFFER *buf)
                    return XML_LOADERROR;
                  }
                mem_free (item_name);
-               for(int i = 0; i < 7; ++i) {buf_next(buf);} /* Skip CDATA[[ */
+               for(int i = 0; i < 6; ++i) {buf_next(buf);} /* Skip CDATA[ */
                /*  It is a CDATA element. Skip everything until the next occurence
                 *  of ']]>'
                 */
@@ -1454,7 +1454,7 @@ xml_load_item (XML_ITEM  *item, XML_BUFFER *buf)
                     }
                     size_t newCdataSize = cdataSize + size;
                     cdata = (char*) mem_realloc (cdata, newCdataSize + 1); /* +1 for terminator */
-                    memcpy(&cdata[cdataSize], comment, size + 1); /* +1 for terminator, if !found then one byte to many is copied here */
+                    memcpy(&cdata[cdataSize], comment, size + 1 - (int)(!found)); /* +1 for terminator, -!found to skip the extra space '>' sign */
                     cdataSize = newCdataSize;
                     if(!found) {
                       /* add the '>' */
